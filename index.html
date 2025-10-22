@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
+
+  <!-- Flatpickr CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+  <title>Exchange Rate</title>
+
+     <style>
+        body {
+            font-family: 'Lato', sans-serif;
+            padding: 20px;
+            background: #fff;
+            color: #000;
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+        #rate-title {
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            margin-top: 50px;
+            margin-bottom: 0;
+        }
+
+        .tab {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            cursor: pointer;
+            border-bottom: none;
+            color: #666;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab:not(:last-child) {
+            border-right: none;
+        }
+
+        .tab.active[data-tab="Notes"] {
+            background: #A53C6F;
+            color: #fff;
+            margin-bottom: -2px;
+            z-index: 1;
+            margin-left: 1px;
+        }
+        .tab.active[data-tab="SWIFT Transfer"] {
+            background: #A53C6F;
+            color: #fff;
+            margin-bottom: -2px;
+            z-index: 1;
+            margin-left: 1px;
+        }
+        .tab.active[data-tab="Digital Service"] {
+            background: #FFF2F9;
+            color: #333;
+            margin-bottom: -2px;
+            z-index: 1;
+            margin-left: 1px;
+        }
+
+        .tab:hover:not(.active) {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .tab-content {
+            display: none;
+            border-top: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid rgb(199 198 198 / 20%);
+            padding: 12px;
+            text-align: center;
+        }
+
+        td {
+            background: #f1f2ed;
+            color: #333;
+        }
+
+        .tab-content[data-category="Notes"] th {
+            background: #A53C6F;
+            color: white;
+        }
+        .tab-content[data-category="SWIFT Transfer"] th {
+            background: #A53C6F;
+            color: white;
+        }
+        .tab-content[data-category="Digital Service"] th {
+            background: #FFF2F9;
+            color: #333;
+        }
+
+        .currency {
+            color: #333;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .service-type {
+            font-weight: 600;
+        }
+
+        .buy-sell {
+            color: #383838;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        /* Converter Styling */
+        .converter {
+            margin-top: 40px;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            background: #fafafa;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .converter h3 {
+            margin-bottom: -10px;
+            font-size: 27px;
+            color: #8e2961;
+            font-weight: 800;
+        }
+
+        .converter-grid {
+            display: grid;
+            grid-template-columns: 1fr 120px;
+            gap: 15px 20px;
+            width: 100%;
+        }
+
+        .converter input, .converter select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .converter select {
+            background-color: #fff;
+            color: #000;
+            cursor: pointer;
+        }
+
+        .converter select:focus, .converter input:focus {
+            outline: none;
+            border-color: #8e2961;
+        }
+
+        .title-amk-exchange {
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .daily_exchange {
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .note-rates {
+            text-align: start;
+            color: #555;
+            margin-top: 30px;
+        }
+
+        .please_input_amount {
+            color: #555;
+            margin-top: 45px;
+            font-size: 18px;
+        }
+
+        .calendar {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        /* Flatpickr custom styling */
+        .flatpickr-calendar {
+            font-family: 'Lato', sans-serif;
+            border: 1px solid #8e2961;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .flatpickr-months {
+            background: #8e2961;
+            color: white;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .flatpickr-day.today {
+            border-color: #8e2961;
+            background: #f9e6f2;
+        }
+
+        .flatpickr-day.selected {
+            background: #8e2961;
+            color: white;
+        }
+
+        .flatpickr-day:hover {
+            background: #f2d8e6;
+            color: #000;
+        }
+
+        .text-convert-currency {
+            text-align: start;
+        }
+        .controll-convert-currency {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .icon-convert img {
+            width: 40px;
+        }
+
+    </style>
+
+</head>
+<body>
+
+    <h2>Foreign Exchange Rates</h2>
+    <p class="title-amk-exchange">AMK exchange rates are subject to change on a regular basis during business hour.</p>
+    <p class="daily_exchange">Daily Exchange Rate</p>
+    <div class="calendar">
+        <div id="rate-title">Loading...</div>
+        <div id="rateDate" class="calendar-icon">
+            📅
+        </div>
+    </div>
+
+
+    <div class="tabs">
+        <div class="service-type tab active" data-tab="Notes">Over the Counter</div>
+        <!-- <div class="service-type tab" data-tab="SWIFT Transfer">SWIFT Transfer</div> -->
+        <div class="service-type tab" data-tab="Digital Service">Digital Service</div>
+    </div>
+
+    <!-- Tab Contents - ADDED data-category attributes -->
+    <div id="Notes" class="tab-content active" data-category="Notes"></div>
+    <div id="SWIFT Transfer" class="tab-content" data-category="SWIFT Transfer"></div>
+    <div id="Digital Service" class="tab-content" data-category="Digital Service"></div>
+
+    <div class="note-rates">
+        <h4>Notes:</h4>
+        <p>• The above rates are updated on every working day only.</p>
+        <p>• The rates are quoted for indication purpose only and subject to variation. For further information, please contact our nearest offices or contact center 023 220 202 or 1800 200 200 (No Fee Charge).</p>
+    </div>
+    <div class="please_input_amount">
+        <p>Please input amount followed by its original currency and then choose a destination currency.</p>
+    </div>
+
+    <!-- Converter Section -->
+    <div class="converter">
+        <h3>Currency Converter</h3>
+        <div>
+            <p class="text-convert-currency">Please note that the results used by the Currency Converter are indicative only. The actual result may differ from result above.</p>
+        </div>
+        <div class="controll-convert-currency">
+            <div class="converter-grid">
+                <input type="number" id="fromAmount" placeholder="From Amount">
+                <select id="fromCurrency">
+                    <option value="USD">USD</option>
+                    <option value="KHR">KHR</option>
+                    <option value="THB">THB</option>
+                </select>
+
+                <input type="text" id="resultAmount" placeholder="Result" readonly>
+                <select id="toCurrency">
+                    <option value="KHR">KHR</option>
+                    <option value="USD">USD</option>
+                    <option value="THB">THB</option>
+                </select>
+
+            </div>
+            <div class="icon-convert">
+                <img src="http://174.138.23.119:8181/wp-content/uploads/2025/09/icon-convert-currency-removebg-preview.png" alt="">
+            </div>
+        </div>
+    </div>
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        flatpickr("#rateDate", {
+            dateFormat: "Y-m-d",
+            defaultDate: new Date(),
+            onChange: function (selectedDates, dateStr) {
+                fetchRates(dateStr);
+            }
+        });
+
+        function formatRate(value) {
+            const num = Number(value);
+
+            if (num >= 1000 && Number.isInteger(num)) {
+                return new Intl.NumberFormat("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                }).format(num);
+            }
+
+            return new Intl.NumberFormat("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(num);
+        }
+
+
+        async function fetchRates(date = "") {
+            try {
+                let json;
+                try {
+                    // let url = "http://174.138.23.119:8484/api/v1/@config/rates";
+                    let url = "http://localhost:8000/api/v1/@config/rates";
+                    if (date) {
+                        url += `?date=${date}`;
+                    }
+                    const response = await fetch(url);
+                    json = await response.json();
+                } catch (apiError) {
+                    console.log("API not available");
+                }
+
+                if (!json.success || !json.data || Object.keys(json.data).length === 0) {
+                    document.getElementById("rate-title").textContent =
+                    json.message || `No exchange rates found for ${date}`;
+
+                    ["Notes", "SWIFT Transfer", "Digital Service"].forEach(tabId => {
+                    const container = document.getElementById(tabId);
+                        if (container) {
+                            container.innerHTML = `<p style="color:#a63c6f; font-weight:bold; padding:20px;">
+                            ${json.message || "No exchange rates available for the selected date."}
+                            </p>`;
+                        }
+                    });
+                    document.querySelector(".converter").style.display = "none";
+                    return;
+
+                } else {
+                    document.querySelector(".converter").style.display = "block";
+                }
+
+            const data = json.data;
+
+            // --- Show last updated date ---
+            let lastCreatedAt = null;
+            for (const category of Object.keys(data)) {
+                for (const currency of Object.values(data[category])) {
+                    if (currency?.createdAt) {
+                        if (!lastCreatedAt || new Date(currency.createdAt) > new Date(lastCreatedAt)) {
+                            lastCreatedAt = currency.createdAt;
+                        }
+                    }
+                }
+            }
+
+            if (lastCreatedAt) {
+                const dt = new Date(lastCreatedAt);
+                const options = {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                    timeZone: "Asia/Phnom_Penh"
+                };
+                const formatted = dt.toLocaleString("en-US", options);
+                document.getElementById("rate-title").textContent = `Date: ${formatted}`;
+            }
+            // --- Render tables ---
+
+            Object.keys(data).forEach(category => {
+                const container = document.getElementById(category);
+                if (container) {
+                    let html =
+                    `<table>
+                        <thead>
+                            <tr>
+                                <th>Currency</th>
+                                <th>Bid</th>
+                                <th>Ask</th>
+                            </tr>
+                        </thead>
+                    <tbody>`;
+
+                    const currencyMap = {
+                        exchangeUSDKHR: "US Dollar (USD)",
+                        exchangeTHBKHR: "Thai Baht (THB)",
+                    };
+
+                    // Sort so USD always appears first
+                    const sortedEntries = Object.entries(data[category]).sort(([a], [b]) => {
+                        if (a === "exchangeUSDKHR") return -1;
+                        if (b === "exchangeUSDKHR") return 1;
+                        return 0;
+                    });
+
+                    sortedEntries.forEach(([currency, rates]) => {
+                        if (category === "Digital Service" && currency === "exchangeTHBKHR") return;
+
+                        const displayName = currencyMap[currency] || currency;
+                        html += `
+                        <tr>
+                            <td class="currency">${displayName}</td>
+                            <td class="buy-sell">${formatRate(rates.buyRate)} KHR</td>
+                            <td class="buy-sell">${formatRate(rates.sellRate)} KHR</td>
+                        </tr>`;
+                    });
+
+                    html += `</tbody></table>`;
+                    container.innerHTML = html;
+                }
+            });
+
+            // --- Converter ---
+            const fromAmount = document.getElementById("fromAmount");
+            const resultAmount = document.getElementById("resultAmount");
+            const fromCurrency = document.getElementById("fromCurrency");
+            const toCurrency = document.getElementById("toCurrency");
+
+            // function convert() {
+            //     const amount = parseFloat(fromAmount.value);
+            //     if (isNaN(amount)) {
+            //         resultAmount.value = "";
+            //         return;
+            //     }
+            //     const activeTab = document.querySelector(".tab.active");
+            //     const category = activeTab ? activeTab.dataset.tab : "Notes";
+            //     const rates = data[category];
+            //     if (!rates) return;
+
+            //     if (fromCurrency.value === toCurrency.value) {
+            //         resultAmount.value = amount;
+            //         return;
+            //     }
+
+            //     // USD ⇄ KHR
+            //     if (fromCurrency.value === "USD" && toCurrency.value === "KHR") {
+            //         resultAmount.value = (amount * rates["exchangeUSDKHR"].buyRate).toFixed(2);
+            //     } else if (fromCurrency.value === "KHR" && toCurrency.value === "USD") {
+            //         resultAmount.value = (amount / rates["exchangeUSDKHR"].sellRate).toFixed(2);
+            //     }
+            //     // THB ⇄ KHR - FIXED the typo in "exchnageTHBKHR"
+            //     else if (fromCurrency.value === "THB" && toCurrency.value === "KHR") {
+            //         resultAmount.value = (amount * rates["exchangeTHBKHR"].buyRate).toFixed(2);
+            //     } else if (fromCurrency.value === "KHR" && toCurrency.value === "THB") {
+            //         resultAmount.value = (amount / rates["exchangeTHBKHR"].sellRate).toFixed(2);
+            //     }
+            //     // USD ⇄ THB (via KHR) - FIXED the typo in "exchnageTHBKHR"
+            //     else if (fromCurrency.value === "USD" && toCurrency.value === "THB") {
+            //         const khrAmount = amount * rates["exchangeUSDKHR"].buyRate;
+            //         resultAmount.value = (khrAmount / rates["exchangeTHBKHR"].sellRate).toFixed(2);
+            //     } else if (fromCurrency.value === "THB" && toCurrency.value === "USD") {
+            //         const khrAmount = amount * rates["exchangeTHBKHR"].buyRate;
+            //         resultAmount.value = (khrAmount / rates["exchangeUSDKHR"].sellRate).toFixed(2);
+            //     } else {
+            //         resultAmount.value = "N/A";
+            //     }
+            // }
+
+
+            function convert() {
+                const amount = parseFloat(fromAmount.value);
+                if (isNaN(amount)) {
+                    resultAmount.value = "";
+                    return;
+                }
+                const activeTab = document.querySelector(".tab.active");
+                const category = activeTab ? activeTab.dataset.tab : "Notes";
+                const rates = data[category];
+                if (!rates) return;
+
+                let result;
+
+                if (fromCurrency.value === toCurrency.value) {
+                    result = amount;
+                }
+                // USD ⇄ KHR
+                else if (fromCurrency.value === "USD" && toCurrency.value === "KHR") {
+                    result = amount * rates["exchangeUSDKHR"].buyRate;
+                } else if (fromCurrency.value === "KHR" && toCurrency.value === "USD") {
+                    result = amount / rates["exchangeUSDKHR"].sellRate;
+                }
+                // THB ⇄ KHR
+                else if (fromCurrency.value === "THB" && toCurrency.value === "KHR") {
+                    result = amount * rates["exchangeTHBKHR"].buyRate;
+                } else if (fromCurrency.value === "KHR" && toCurrency.value === "THB") {
+                    result = amount / rates["exchangeTHBKHR"].sellRate;
+                }
+                // USD ⇄ THB (via KHR)
+                else if (fromCurrency.value === "USD" && toCurrency.value === "THB") {
+                    const khrAmount = amount * rates["exchangeUSDKHR"].buyRate;
+                    result = khrAmount / rates["exchangeTHBKHR"].sellRate;
+                } else if (fromCurrency.value === "THB" && toCurrency.value === "USD") {
+                    const khrAmount = amount * rates["exchangeTHBKHR"].buyRate;
+                    result = khrAmount / rates["exchangeUSDKHR"].sellRate;
+                } else {
+                    resultAmount.value = "N/A";
+                    return;
+                }
+
+                if (toCurrency.value === "KHR") {
+                    resultAmount.value = Math.round(result).toLocaleString("en-US"); // No decimals
+                } else {
+                    resultAmount.value = result.toFixed(2);
+                }
+            }
+
+            fromAmount.addEventListener("input", convert);
+            fromCurrency.addEventListener("change", convert);
+            toCurrency.addEventListener("change", convert);
+
+            document.querySelectorAll(".tab").forEach(tab => {
+                tab.addEventListener("click", () => {
+                    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+                    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+                    tab.classList.add("active");
+                    document.getElementById(tab.dataset.tab).classList.add("active");
+                    convert();
+                });
+            });
+
+            } catch (err) {
+                console.error("Error fetching rates:", err);
+            }
+        }
+
+        const today = new Date().toISOString().split("T")[0];
+        fetchRates(today);
+
+
+        // Swap currency and amount when clicking the icon
+        const swapIcon = document.querySelector(".icon-convert img");
+
+        swapIcon.addEventListener("click", () => {
+            // Swap selected currencies
+            const tempCurrency = fromCurrency.value;
+            fromCurrency.value = toCurrency.value;
+            toCurrency.value = tempCurrency;
+
+            // Swap values
+            const tempAmount = fromAmount.value;
+            fromAmount.value = resultAmount.value;
+            resultAmount.value = tempAmount;
+
+            convert(); // Recalculate with new values
+        });
+
+
+    </script>
+
+</body>
+</html>
