@@ -57,65 +57,30 @@ class ExchangeRateController extends Controller
         try {
             $dateParam = is_array($request->query('date')) ? $request->query('date')[0] : $request->query('date');
 
-            $today = now()->toDateString();
-            $queryDate = $dateParam ?? $today;
+            $queryDate = $dateParam ? Carbon::parse($dateParam, config('app.timezone', 'UTC')) : now();
 
-            if ($dateParam) {
-                $localDate = Carbon::parse($queryDate, config('app.timezone', 'UTC'));
-                $start = $localDate->copy()->startOfDay()->utc();
-                $end = $localDate->copy()->endOfDay()->utc();
+            $queryDateString = $queryDate->toDateString();
 
-            } else {
-                $start = now()->startOfDay()->utc();
-                $end = now()->endOfDay()->utc();
-            }
+            $latestRate = ExchangeRate::whereRaw('DATE(created_at) <= ?', [$queryDateString])->orderBy('created_at', 'desc')->first();
 
-            $rates = ExchangeRate::whereBetween('created_at', [$start, $end])->orderBy('created_at', 'desc')->get();
-
-            if ($rates->isEmpty()) {
-                $isToday = $queryDate === $today;
-
-                if (!$isToday && $dateParam) {
-                    $closestRate = ExchangeRate::where('created_at', '<=', $end)->orderBy('created_at', 'desc')->first();
-
-                    if (!$closestRate) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => "No exchange rates found for {$queryDate} or any earlier date",
-                        ], 404);
-                    }
-
-                    $lastDate = $closestRate->created_at->toDateString();
-                    $lastRates = ExchangeRate::whereDate('created_at', $lastDate)->orderBy('created_at', 'desc')->get();
-
-                    return response()->json([
-                        'success' => true,
-                        'note' => "No rates found for {$queryDate}, showing last available date: {$lastDate}",
-                        'data' => $this->groupRates($lastRates),
-                    ], 200);
-                }
-
-                // Get the most recent available rates
-                $lastRate = ExchangeRate::latest('created_at')->first();
-                if (!$lastRate) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'No exchange rates found at all.',
-                    ], 404);
-                }
-
-                $lastDate = $lastRate->created_at->toDateString();
-                $lastRates = ExchangeRate::whereDate('created_at', $lastDate)->orderBy('created_at', 'desc')->get();
-
+            if (!$latestRate) {
                 return response()->json([
-                    'success' => true,
-                    'note' => "No rates found for today, showing last available date: {$lastDate}",
-                    'data' => $this->groupRates($lastRates),
-                ], 200);
+                    'success' => false,
+                    'message' => "No exchange rates found for {$queryDateString} or any earlier date.",
+                ], 404);
             }
+
+            $rateDate = Carbon::parse($latestRate->created_at)->toDateString();
+
+            $rates = ExchangeRate::whereRaw('DATE(created_at) = ?', [$rateDate])->whereIn('id', function($query) use ($rateDate) {
+                    $query->selectRaw('MAX(id)')->from('exchange_rates')->whereRaw('DATE(created_at) = ?', [$rateDate]) ->groupBy('service_type', 'currency');
+            })->orderBy('created_at', 'desc')->get();
+
+            $isRequestedDate = $rateDate === $queryDateString;
 
             return response()->json([
                 'success' => true,
+                'note' => $isRequestedDate ? null : "No rates found for {$queryDateString}, showing last available date: {$rateDate}",
                 'data' => $this->groupRates($rates),
             ], 200);
 
@@ -123,6 +88,7 @@ class ExchangeRateController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Failed to fetch exchange rate',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

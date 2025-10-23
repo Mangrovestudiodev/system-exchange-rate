@@ -27,11 +27,18 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // public routes (not require API token)
 Route::middleware(['throttle:60,1'])->prefix('v1/@config')->group(function () {
-    Route::post('/auth/signin', [AuthController::class, 'signin']);
+    Route::post('/signin', [AuthController::class, 'signin']);
 });
 
 Route::middleware(['throttle:60,1'])->prefix('v1/@config')->group(function () {
     Route::get('/rates', [ExchangeRateController::class, 'index']);
+});
+
+// ping API
+Route::middleware(['throttle:60,1'])->prefix('v1/@config')->group(function () {
+    Route::get('/ping', function () {
+        return response()->json(['message' => 'API working correctly!']);
+    });
 });
 
 // protected routes (require valid API token)
