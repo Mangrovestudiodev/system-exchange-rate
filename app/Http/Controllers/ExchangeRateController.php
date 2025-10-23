@@ -30,7 +30,6 @@ class ExchangeRateController extends Controller
                         'buy_rate'     => (float) $rates['buyRate'],
                         'sell_rate'    => (float) $rates['sellRate'],
                     ]);
-
                     $createdRates[] = $created;
                 }
             }
@@ -52,8 +51,7 @@ class ExchangeRateController extends Controller
         }
     }
 
-    public function index(Request $request)
-    {
+    public function index(Request $request){
         try {
             $dateParam = is_array($request->query('date')) ? $request->query('date')[0] : $request->query('date');
 
@@ -73,7 +71,7 @@ class ExchangeRateController extends Controller
             $rateDate = Carbon::parse($latestRate->created_at)->toDateString();
 
             $rates = ExchangeRate::whereRaw('DATE(created_at) = ?', [$rateDate])->whereIn('id', function($query) use ($rateDate) {
-                    $query->selectRaw('MAX(id)')->from('exchange_rates')->whereRaw('DATE(created_at) = ?', [$rateDate]) ->groupBy('service_type', 'currency');
+                $query->selectRaw('MAX(id)')->from('exchange_rates')->whereRaw('DATE(created_at) = ?', [$rateDate])->groupBy('service_type', 'currency');
             })->orderBy('created_at', 'desc')->get();
 
             $isRequestedDate = $rateDate === $queryDateString;
@@ -93,8 +91,7 @@ class ExchangeRateController extends Controller
         }
     }
 
-    private function groupRates($rates)
-    {
+    private function groupRates($rates){
         $grouped = [];
 
         foreach ($rates as $rate) {
@@ -102,12 +99,11 @@ class ExchangeRateController extends Controller
                 'buyRate' => (float) $rate->buy_rate,
                 'sellRate' => (float) $rate->sell_rate,
                 'id' => $rate->id,
-                'referenceId' => $rate->reference_id ?? null,
+                'referenceId' => $rate->referenceId ?? null,
                 'createdAt' => $rate->created_at ? $rate->created_at->toIso8601String() : null,
             ];
         }
         return $grouped;
     }
-
 }
 
